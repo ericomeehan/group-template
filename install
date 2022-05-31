@@ -1,0 +1,73 @@
+#!/bin/bash
+#
+# install
+#
+# eric o meehan
+# 2022-05-24
+#
+# adds this group to a given installation
+
+GROUP_ID=group-template
+
+function log() {
+	priority=${2:-6}
+	executable=$(cd $(dirname $0) && pwd)/$0
+	[[ $syslogServer != 0 ]] && syslogServerArg="-n $syslogServer --tcp"
+	tag="executable={{ $executable }} | executionId={{ $executionId }}"
+	logger -p $priority $t "$tag" $syslogServerArg "$1"
+}
+
+
+while [[ $# -gt 0 ]]
+do
+	case $1 in
+		-e|--executionId)
+			executionId=$2
+			shift ; shift ;;
+		-i|--installationId)
+			installationId=$2
+			shift ; shift ;;
+		-s|--syslogServer)
+			syslogServer=$2
+			shift ; shift ;;
+		*)
+			echo "invalid argument: $2" >&2
+			exit 1 ;;
+	esac
+done
+[[ -z $executionId ]] && executionId=$(uuidgen)
+[[ -z $syslogServer ]] && syslogServer=0
+if [[ -z $installationId ]]
+then
+	log "argument required | argument={{ installationId }}" 3
+	log "exiting" 3
+	exit 1
+fi
+
+groupSource=/usr/local/src/$installationId/groups/$GROUP_ID
+
+log "begin"
+log "installing group | group={{ $GROUP_ID }}"
+
+# ...
+
+for user in $(ls $groupSource/users)
+do
+	log "installing group user | user={{ $user }}"
+	.$groupSource/users/$user/install		\
+		--executionId $executionId		\
+		--groupId $GROUP_ID			\
+		--installationId $installationId	\
+		--syslogServer $syslogServer		\
+		--userId $user
+	usermod -a -G $GROUP_ID $user
+done
+for policy in $(ls $groupSource/policies)
+do
+	log "installing group policy | policy={{ $policy }}"
+	.$groupSource/policies/$policy/install		\
+		--executionId $executionId		\
+		--groupId $GROUP_ID			\
+		--installationId $installationId	\
+		--syslogServer $syslogServer
+done
