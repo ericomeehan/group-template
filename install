@@ -54,7 +54,7 @@ log "installing group | group={{ $GROUP_ID }}"
 for user in $(ls $groupSource/users)
 do
 	log "installing group user | user={{ $user }}"
-	.$groupSource/users/$user/install		\
+	bash $groupSource/users/$user/install		\
 		--executionId $executionId		\
 		--groupId $GROUP_ID			\
 		--installationId $installationId	\
@@ -65,7 +65,7 @@ done
 for policy in $(ls $groupSource/policies)
 do
 	log "installing group policy | policy={{ $policy }}"
-	.$groupSource/policies/$policy/install		\
+	bash $groupSource/policies/$policy/install	\
 		--executionId $executionId		\
 		--groupId $GROUP_ID			\
 		--installationId $installationId	\
